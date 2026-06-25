@@ -3,20 +3,24 @@ import "../auth.form.scss"
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useauth';
 
-export const Register = () => {
+export default function Register () {
 
   const navigate = useNavigate()
   const [username, setUsername] = useState("");
   const [email, setemail] = useState("");
-  const [passowrd, setPassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const {loading, handleRegister} = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const success = await handleRegister({username,email,password})
-    if(success){
+    setError("");
+    const result = await handleRegister({username,email,password})
+    if(result.success){
       navigate('/')
+    }else{
+      setError(result.error)
     }
   }
 
@@ -28,15 +32,16 @@ export const Register = () => {
     <main>
       <div className='form-container'>
       <h1>Register</h1>
+      {error && <div style={{color: "red", marginBottom: "10px"}}>{error}</div>}
       <form onSubmit={handleSubmit}>
         <div className='input-group'>
-          <label htmlFor='email'>Email</label>
+          <label htmlFor='email'>Username</label>
           <input 
           onChange={(e) => {setUsername(e.target.value)}}
           type='username' id='username' placeholder='Enter Username'></input>
         </div>
         <div className='input-group'>
-          <label htmlFor='username'>Username</label>
+          <label htmlFor='username'>Email</label>
           <input 
           onChange={(e) => {setemail(e.target.value)}}
           type='email' id='email' placeholder='Enter email address'></input>

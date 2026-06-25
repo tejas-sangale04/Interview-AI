@@ -1,10 +1,205 @@
 const { GoogleGenAI } = require("@google/genai")
 const { z } = require("zod")
 const { zodToJsonSchema } = require("zod-to-json-schema")
+const puppeteer = require("puppeteer")
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
 })
+
+// Add this helper function above generateInterviewReport
+
+function tryParseJSON(str) {
+    if (typeof str !== "string") return null
+    const trimmed = str.trim()
+    if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) return null
+    try {
+        return JSON.parse(trimmed)
+    } catch {
+        return null
+    }
+}
+
+function unwrapItem(item) {
+    if (typeof item !== "object" || item === null) return item
+
+    let result = { ...item }
+
+    for (const key of Object.keys(result)) {
+        const value = result[key]
+
+        if (typeof value === "string") {
+            const parsed = tryParseJSON(value)
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                result = { ...result, ...parsed }
+            }
+        } else if (Array.isArray(value) && value.length === 1 && typeof value[0] === "string") {
+            const parsed = tryParseJSON(value[0])
+            if (parsed && typeof parsed === "object") {
+                result = { ...result, ...parsed }
+            }
+        }
+    }
+
+    return result
+}
+
+function reconstructArrays(result) {
+
+    function parseQuestionsArray(arr) {
+        if (!Array.isArray(arr) || arr.length === 0) return []
+
+        // Case 1: Already correct format
+        if (arr.every(item => typeof item === "object" && item !== null)) {
+            return arr
+        }
+
+        // Case 2: Flat key-value pairs ["question", "...", "intention", "...", "answer", "..."]
+        if (arr[0] === "question" || arr[0] === "actual question text") {
+            const items = []
+            for (let i = 0; i < arr.length; i += 6) {
+                if (arr[i + 1] && arr[i + 3] && arr[i + 5]) {
+                    items.push({
+                        question: arr[i + 1],
+                        intention: arr[i + 3],
+                        answer: arr[i + 5]
+                    })
+                }
+            }
+            return items
+        }
+
+        // Case 3: Plain array of strings - wrap each string as the question
+        return arr
+            .filter(item => typeof item === "string" && item.trim() !== "")
+            .map(str => ({
+                question: str,
+                intention: "To assess the candidate's depth of knowledge and practical experience on this topic.",
+                answer: "Provide a clear, structured explanation with relevant examples from your own experience."
+            }))
+    }
+
+    function parseSkillGapsArray(arr) {
+        if (!Array.isArray(arr) || arr.length === 0) return []
+
+        if (arr.every(item => typeof item === "object" && item !== null)) {
+            return arr
+        }
+
+        if (arr[0] === "skill" || arr[0] === "skill name") {
+            const items = []
+            for (let i = 0; i < arr.length; i += 4) {
+                if (arr[i + 1] && arr[i + 3]) {
+                    items.push({ skill: arr[i + 1], severity: arr[i + 3] })
+                }
+            }
+            return items
+        }
+
+        return arr
+            .filter(item => typeof item === "string" && item.trim() !== "")
+            .map(str => ({ skill: str, severity: "medium" }))
+    }
+
+    function parsePreparationPlanArray(arr) {
+        if (!Array.isArray(arr) || arr.length === 0) return []
+
+        if (arr.every(item => typeof item === "object" && item !== null)) {
+            return arr
+        }
+
+        if (arr[0] === "day") {
+            const items = []
+            let i = 0
+            while (i < arr.length) {
+                if (arr[i] === "day" && typeof arr[i + 1] === "number") {
+                    const day = arr[i + 1]
+                    i += 2
+                    let focus = ""
+                    if (arr[i] === "focus" && typeof arr[i + 1] === "string") {
+                        focus = arr[i + 1]
+                        i += 2
+                    }
+                    const tasks = []
+                    if (arr[i] === "tasks") {
+                        i += 1
+                        while (i < arr.length && !(arr[i] === "day" && typeof arr[i + 1] === "number")) {
+                            if (typeof arr[i] === "string") tasks.push(arr[i])
+                            i++
+                        }
+                    }
+                    items.push({ day, focus, tasks })
+                } else {
+                    i++
+                }
+            }
+            return items
+        }
+
+        return arr
+            .filter(item => typeof item === "string" && item.trim() !== "")
+            .map((str, index) => {
+                const match = str.match(/^Day\s*(\d+)\s*:\s*(.*)$/i)
+                if (match) {
+                    return {
+                        day: parseInt(match[1], 10),
+                        focus: match[2].split(".")[0].replace(/^Focus on\s*/i, "").trim(),
+                        tasks: [match[2].trim()]
+                    }
+                }
+                return {
+                    day: index + 1,
+                    focus: str.split(".")[0].trim(),
+                    tasks: [str]
+                }
+            })
+    }
+
+    const technicalQuestions = parseQuestionsArray(result.technicalQuestions)
+        .map(unwrapItem)
+        .map(item => ({
+            question: item.question || "",
+            intention: item.intention || "",
+            answer: item.answer || ""
+        }))
+        .filter(item => item.question && item.intention && item.answer)
+
+    const behavioralQuestions = parseQuestionsArray(result.behavioralQuestions)
+        .map(unwrapItem)
+        .map(item => ({
+            question: item.question || "",
+            intention: item.intention || "",
+            answer: item.answer || ""
+        }))
+        .filter(item => item.question && item.intention && item.answer)
+
+    const skillGaps = parseSkillGapsArray(result.skillGaps)
+        .map(unwrapItem)
+        .map(item => ({
+            skill: item.skill || "",
+            severity: [ "low", "medium", "high" ].includes(item.severity) ? item.severity : "medium"
+        }))
+        .filter(item => item.skill)
+
+    const preparationPlan = parsePreparationPlanArray(result.preparationPlan)
+        .map(unwrapItem)
+        .map(item => ({
+            day: typeof item.day === "number" ? item.day : parseInt(item.day) || 1,
+            focus: item.focus || "",
+            tasks: Array.isArray(item.tasks) ? item.tasks.filter(t => typeof t === "string") : []
+        }))
+        .filter(item => item.focus && item.tasks.length > 0)
+
+    return {
+        title: result.title || "Job Interview Report",
+        matchScore: result.matchScore || 0,
+        technicalQuestions,
+        behavioralQuestions,
+        skillGaps,
+        preparationPlan
+    }
+}
+   
 
 const interviewReportSchema = z.object({
     matchScore: z.number().describe("A score between 0 and 100 indicating how well the candidate's profile matches the job describe"),
@@ -20,7 +215,7 @@ const interviewReportSchema = z.object({
     })).describe("Behavioral questions that can be asked in the interview along with their intention and how to answer them"),
     skillGaps: z.array(z.object({
         skill: z.string().describe("The skill which the candidate is lacking"),
-        severity: z.enum(["low", "medium", "high"]).describe("The severity of this skill gap, i.e. how important is this skill for the job and how much it can impact the candidate's chances")
+        severity: z.enum([ "low", "medium", "high" ]).describe("The severity of this skill gap, i.e. how important is this skill for the job and how much it can impact the candidate's chances")
     })).describe("List of skill gaps in the candidate's profile along with their severity"),
     preparationPlan: z.array(z.object({
         day: z.number().describe("The day number in the preparation plan, starting from 1"),
@@ -37,31 +232,62 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
                         Resume: ${resume}
                         Self Description: ${selfDescription}
                         Job Description: ${jobDescription}
+
+                       Return a single JSON object with this EXACT structure. Each array must contain OBJECTS not strings:
+        {
+            "title": "Full Stack Developer",
+            "matchScore": 85,
+            "technicalQuestions": [
+                {
+                    "question": "Write your actual question here",
+                    "intention": "Write the intention here",
+                    "answer": "Write the answer guidance here"
+                }
+            ],
+            "behavioralQuestions": [
+                {
+                    "question": "Write your actual question here",
+                    "intention": "Write the intention here",
+                    "answer": "Write the answer guidance here"
+                }
+            ],
+            "skillGaps": [
+                {
+                    "skill": "Write skill name here",
+                    "severity": "medium"
+                }
+            ],
+            "preparationPlan": [
+                {
+                    "day": 1,
+                    "focus": "Write focus area here",
+                    "tasks": ["Write task 1 here", "Write task 2 here"]
+                }
+            ]
+        }
 `
-    try {
-        console.log("Sending prompt to AI:", prompt.substring(0, 100) + "...")
-        
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: zodToJsonSchema(interviewReportSchema),
-            }
-        })
 
-        console.log("Raw AI Response:", response.text)
-        const parsedResponse = JSON.parse(response.text)
-        console.log("Parsed AI Response:", parsedResponse)
-        
-        return parsedResponse
-    } catch (error) {
-        console.error("Error in generateInterviewReport:", error.message)
-        console.error("Full error:", error)
-        throw error
-    }
+    const response = await ai.models.generateContent({
+       model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: zodToJsonSchema(interviewReportSchema),
+        }
+    })
 
+    console.log("AI RAW RESPONSE:", response.text)
 
+    //return JSON.parse(response.text)
+     const parsed = JSON.parse(response.text)
+    const result = Array.isArray(parsed) ? parsed[0] : parsed
+
+    // ✅ Reconstruct proper objects from flat arrays
+    const sanitized = reconstructArrays(result)
+
+    console.log("SANITIZED:", JSON.stringify(sanitized, null, 2))
+
+    return sanitized
 }
 
 
@@ -101,7 +327,7 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
                         The content of resume should be not sound like it's generated by AI and should be as close as possible to a real human-written resume.
                         you can highlight the content using some colors or different font styles but the overall design should be simple and professional.
                         The content should be ATS friendly, i.e. it should be easily parsable by ATS systems without losing important information.
-                        The resume should not be so lengthy, it should ideally be 1-2 pages long when converted to PDF. Focus on quality rather than quantity and make sure to include all the relevant information that can increase the candidate's chances of getting an interview call for the given job description.
+                        The resume should not be so lengthy, it should ideally be 1 page long when converted to PDF. Focus on quality rather than quantity and make sure to include all the relevant information that can increase the candidate's chances of getting an interview call for the given job description.
                     `
 
     const response = await ai.models.generateContent({

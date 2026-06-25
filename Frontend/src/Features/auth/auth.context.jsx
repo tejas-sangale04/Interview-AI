@@ -11,19 +11,18 @@ export const AuthProvider = ({ children }) => {
      useEffect(() => {
         const fetchUser = async () => {
             try {
-                const data = await getMe()
+                const data = await getMe();
                 if (data && data.user) {
                     setUser(data.user)
                 }
             } catch (err) {
-                console.error(err)
+                console.error(err);
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
        }
-        fetchUser()
+        fetchUser();
     }, [])
-    
 
     return (
         <AuthContext.Provider value={{ user, setUser, loading, setLoading }}>
