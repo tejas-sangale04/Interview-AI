@@ -18,7 +18,7 @@ export default function Login () {
     e.preventDefault()
     setError("");
     setSuccess("");
-    
+
     const result = await handleLogin({ email, password })
     if(result.success){
       setSuccess("Login successful! Redirecting...");
@@ -57,7 +57,7 @@ export default function Login () {
           <input 
             value={password}
             onChange={(e) => {setPassword(e.target.value)}}
-            type='password' id='password' name='password' placeholder='Enter passowrd'/>
+            type='password' id='password' name='password' placeholder='Enter password'/>
         </div>
 
         <button className='button primary-button'>Login</button>

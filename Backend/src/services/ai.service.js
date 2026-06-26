@@ -45,168 +45,55 @@ function unwrapItem(item) {
 }
 
 function reconstructArrays(result) {
-
+    // 1. Define helper parsing functions inside
     function parseQuestionsArray(arr) {
-        if (!Array.isArray(arr) || arr.length === 0) return []
-
-        // Case 1: Already correct format
-        if (arr.every(item => typeof item === "object" && item !== null)) {
-            return arr
-        }
-
-        // Case 2: Flat key-value pairs ["question", "...", "intention", "...", "answer", "..."]
-        if (arr[0] === "question" || arr[0] === "actual question text") {
-            const items = []
-            for (let i = 0; i < arr.length; i += 6) {
-                if (arr[i + 1] && arr[i + 3] && arr[i + 5]) {
-                    items.push({
-                        question: arr[i + 1],
-                        intention: arr[i + 3],
-                        answer: arr[i + 5]
-                    })
-                }
-            }
-            return items
-        }
-
-        // Case 3: Plain array of strings - wrap each string as the question
+        if (!Array.isArray(arr) || arr.length === 0) return [];
+        if (arr.every(item => typeof item === "object" && item !== null)) return arr;
         return arr
             .filter(item => typeof item === "string" && item.trim() !== "")
             .map(str => ({
                 question: str,
-                intention: "To assess the candidate's depth of knowledge and practical experience on this topic.",
-                answer: "Provide a clear, structured explanation with relevant examples from your own experience."
-            }))
+                intention: "To assess depth of knowledge.",
+                answer: "Provide a structured explanation."
+            }));
     }
 
     function parseSkillGapsArray(arr) {
-        if (!Array.isArray(arr) || arr.length === 0) return []
-
-        if (arr.every(item => typeof item === "object" && item !== null)) {
-            return arr
-        }
-
-        if (arr[0] === "skill" || arr[0] === "skill name") {
-            const items = []
-            for (let i = 0; i < arr.length; i += 4) {
-                if (arr[i + 1] && arr[i + 3]) {
-                    items.push({ skill: arr[i + 1], severity: arr[i + 3] })
-                }
-            }
-            return items
-        }
-
+        if (!Array.isArray(arr) || arr.length === 0) return [];
+        if (arr.every(item => typeof item === "object" && item !== null)) return arr;
         return arr
             .filter(item => typeof item === "string" && item.trim() !== "")
-            .map(str => ({ skill: str, severity: "medium" }))
+            .map(str => ({ skill: str, severity: "medium" }));
     }
 
     function parsePreparationPlanArray(arr) {
-        if (!Array.isArray(arr) || arr.length === 0) return []
-
-        if (arr.every(item => typeof item === "object" && item !== null)) {
-            return arr
-        }
-
-        if (arr[0] === "day") {
-            const items = []
-            let i = 0
-            while (i < arr.length) {
-                if (arr[i] === "day" && typeof arr[i + 1] === "number") {
-                    const day = arr[i + 1]
-                    i += 2
-                    let focus = ""
-                    if (arr[i] === "focus" && typeof arr[i + 1] === "string") {
-                        focus = arr[i + 1]
-                        i += 2
-                    }
-                    const tasks = []
-                    if (arr[i] === "tasks") {
-                        i += 1
-                        while (i < arr.length && !(arr[i] === "day" && typeof arr[i + 1] === "number")) {
-                            if (typeof arr[i] === "string") tasks.push(arr[i])
-                            i++
-                        }
-                    }
-                    items.push({ day, focus, tasks })
-                } else {
-                    i++
-                }
-            }
-            return items
-        }
-
+        if (!Array.isArray(arr) || arr.length === 0) return [];
+        if (arr.every(item => typeof item === "object" && item !== null)) return arr;
         return arr
             .filter(item => typeof item === "string" && item.trim() !== "")
-            .map((str, index) => {
-                const match = str.match(/^Day\s*(\d+)\s*:\s*(.*)$/i)
-                if (match) {
-                    return {
-                        day: parseInt(match[1], 10),
-                        focus: match[2].split(".")[0].replace(/^Focus on\s*/i, "").trim(),
-                        tasks: [match[2].trim()]
-                    }
-                }
-                return {
-                    day: index + 1,
-                    focus: str.split(".")[0].trim(),
-                    tasks: [str]
-                }
-            })
+            .map((str, index) => ({
+                day: index + 1,
+                focus: str.split(".")[0].trim(),
+                tasks: [str]
+            }));
     }
-const rawTech = result.technicalQuestions || result.technical_questions || []
-    const rawBeh = result.behavioralQuestions || result.behavioral_questions || []
-    const rawSkills = result.skillGaps || result.skill_gaps || result.weaknesses_skill_gaps || []
-    const rawPlan = result.preparationPlan || result.preparation_plan || []
 
-    // 2. Parse them
-    const technicalQuestions = parseQuestionsArray(rawTech)
-        .map(unwrapItem)
-        .map(item => ({
-            question: item.question || "",
-            intention: item.intention || "",
-            answer: item.answer || ""
-        }))
-        .filter(item => item.question && item.intention && item.answer)
+    // 2. Safely extract data using fallback keys
+    const rawTech = result.technicalQuestions || result.technical_questions || [];
+    const rawBeh = result.behavioralQuestions || result.behavioral_questions || [];
+    const rawSkills = result.skillGaps || result.skill_gaps || result.weaknesses_skill_gaps || [];
+    const rawPlan = result.preparationPlan || result.preparation_plan || [];
 
-    const behavioralQuestions = parseQuestionsArray(rawBeh)
-        .map(unwrapItem)
-        .map(item => ({
-            question: item.question || "",
-            intention: item.intention || "",
-            answer: item.answer || ""
-        }))
-        .filter(item => item.question && item.intention && item.answer)
-
-    const skillGaps = parseSkillGapsArray(rawSkills)
-        .map(unwrapItem)
-        .map(item => ({
-            skill: item.skill || "",
-            severity: [ "low", "medium", "high" ].includes(item.severity) ? item.severity : "medium"
-        }))
-        .filter(item => item.skill)
-
-    const preparationPlan = parsePreparationPlanArray(rawPlan)
-        .map(unwrapItem)
-        .map(item => ({
-            day: typeof item.day === "number" ? item.day : parseInt(item.day) || 1,
-            focus: item.focus || "",
-            tasks: Array.isArray(item.tasks) ? item.tasks.filter(t => typeof t === "string") : []
-        }))
-        .filter(item => item.focus && item.tasks.length > 0)
-
-    // 3. Return the sanitized object with fallback values
+    // 3. Reconstruct and sanitize
     return {
         title: result.title || result.job_title || "Job Interview Report",
-        matchScore: result.matchScore || result.match_score || 80, // Default to 80 if missing
-        technicalQuestions,
-        behavioralQuestions,
-        skillGaps,
-        preparationPlan
-    }
+        matchScore: typeof result.matchScore === 'number' ? result.matchScore : (result.match_score || 0),
+        technicalQuestions: parseQuestionsArray(rawTech).map(unwrapItem),
+        behavioralQuestions: parseQuestionsArray(rawBeh).map(unwrapItem),
+        skillGaps: parseSkillGapsArray(rawSkills).map(unwrapItem),
+        preparationPlan: parsePreparationPlanArray(rawPlan).map(unwrapItem)
+    };
 }
-   
-
 const interviewReportSchema = z.object({
     matchScore: z.number().describe("A score between 0 and 100 indicating how well the candidate's profile matches the job describe"),
     technicalQuestions: z.array(z.object({
