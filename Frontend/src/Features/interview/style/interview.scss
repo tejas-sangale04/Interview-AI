@@ -477,3 +477,114 @@ $severity-low: #3fb950;
         border-color: rgba($severity-low, 0.25);
     }
 }
+
+// ── Mobile Responsiveness ─────────────────────────────────────────────────────
+@media (max-width: 992px) {
+    // 1. Change the main container from a horizontal row to a vertical column
+    .interview-layout {
+        flex-direction: column;
+        height: auto;
+    }
+
+    // 2. Transform the Left Nav into a horizontal top bar
+    .interview-nav {
+        width: 100%;
+        padding: 1rem;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+
+        .nav-content {
+            display: flex;
+            flex-direction: row;
+            gap: 0.5rem;
+            overflow-x: auto; // Allow horizontal swiping on mobile
+            padding-bottom: 0.25rem;
+            
+            // Hide the scrollbar for a cleaner look
+            &::-webkit-scrollbar { display: none; }
+            -ms-overflow-style: none; 
+            scrollbar-width: none;
+        }
+
+        &__label {
+            display: none; // Hide the word "Sections" to save space
+        }
+
+        &__item {
+            width: auto; // Prevent items from taking 100% width
+            white-space: nowrap; // Keep text on one line
+            padding: 0.5rem 0.75rem;
+        }
+        
+        // Adjust the download button to fit inline
+        button.primary-button {
+            margin-top: 0;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+    }
+
+    // 3. Turn the vertical dividers into horizontal dividers
+    .interview-divider {
+        width: 100%;
+        height: 1px;
+    }
+
+    // 4. Expand the center content area
+    .interview-content {
+        padding: 1.5rem 1rem;
+        max-height: none; // Remove height limit so the whole page scrolls naturally
+        overflow-y: visible;
+        padding-bottom: 2rem;
+    }
+
+    // 5. Transform the Right Sidebar into a bottom panel
+    .interview-sidebar {
+        width: 100%;
+        padding: 1.5rem 1rem;
+        flex-direction: row; // Put the score and gaps side-by-side on tablets
+        flex-wrap: wrap;
+        justify-content: space-around;
+        align-items: flex-start;
+
+        .sidebar-divider {
+            display: none; // Hide the divider in horizontal layout
+        }
+
+        .match-score, .skill-gaps {
+            flex: 1;
+            min-width: 250px;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .skill-gaps__list {
+            justify-content: center;
+        }
+    }
+}
+
+// ── Extra tweaks for very small phones (under 600px) ──────────────────────────
+@media (max-width: 600px) {
+    .interview-nav {
+        flex-direction: column;
+        align-items: stretch;
+        
+        .nav-content {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        button.primary-button {
+            width: 100%; // Make the download button full-width on tiny screens
+            justify-content: center;
+        }
+    }
+
+    .interview-sidebar {
+        flex-direction: column; // Stack the score and skill gaps vertically
+        gap: 2rem;
+    }
+}

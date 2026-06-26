@@ -18,6 +18,7 @@ export default function Login () {
     e.preventDefault()
     setError("");
     setSuccess("");
+    
     const result = await handleLogin({ email, password })
     if(result.success){
       setSuccess("Login successful! Redirecting...");

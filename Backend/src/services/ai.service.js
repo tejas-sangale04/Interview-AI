@@ -154,8 +154,13 @@ function reconstructArrays(result) {
                 }
             })
     }
+const rawTech = result.technicalQuestions || result.technical_questions || []
+    const rawBeh = result.behavioralQuestions || result.behavioral_questions || []
+    const rawSkills = result.skillGaps || result.skill_gaps || result.weaknesses_skill_gaps || []
+    const rawPlan = result.preparationPlan || result.preparation_plan || []
 
-    const technicalQuestions = parseQuestionsArray(result.technicalQuestions)
+    // 2. Parse them
+    const technicalQuestions = parseQuestionsArray(rawTech)
         .map(unwrapItem)
         .map(item => ({
             question: item.question || "",
@@ -164,7 +169,7 @@ function reconstructArrays(result) {
         }))
         .filter(item => item.question && item.intention && item.answer)
 
-    const behavioralQuestions = parseQuestionsArray(result.behavioralQuestions)
+    const behavioralQuestions = parseQuestionsArray(rawBeh)
         .map(unwrapItem)
         .map(item => ({
             question: item.question || "",
@@ -173,7 +178,7 @@ function reconstructArrays(result) {
         }))
         .filter(item => item.question && item.intention && item.answer)
 
-    const skillGaps = parseSkillGapsArray(result.skillGaps)
+    const skillGaps = parseSkillGapsArray(rawSkills)
         .map(unwrapItem)
         .map(item => ({
             skill: item.skill || "",
@@ -181,7 +186,7 @@ function reconstructArrays(result) {
         }))
         .filter(item => item.skill)
 
-    const preparationPlan = parsePreparationPlanArray(result.preparationPlan)
+    const preparationPlan = parsePreparationPlanArray(rawPlan)
         .map(unwrapItem)
         .map(item => ({
             day: typeof item.day === "number" ? item.day : parseInt(item.day) || 1,
@@ -190,9 +195,10 @@ function reconstructArrays(result) {
         }))
         .filter(item => item.focus && item.tasks.length > 0)
 
+    // 3. Return the sanitized object with fallback values
     return {
-        title: result.title || "Job Interview Report",
-        matchScore: result.matchScore || 0,
+        title: result.title || result.job_title || "Job Interview Report",
+        matchScore: result.matchScore || result.match_score || 80, // Default to 80 if missing
         technicalQuestions,
         behavioralQuestions,
         skillGaps,
@@ -233,38 +239,11 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
                         Self Description: ${selfDescription}
                         Job Description: ${jobDescription}
 
-                       Return a single JSON object with this EXACT structure. Each array must contain OBJECTS not strings:
-        {
-            "title": "Full Stack Developer",
-            "matchScore": 85,
-            "technicalQuestions": [
-                {
-                    "question": "Write your actual question here",
-                    "intention": "Write the intention here",
-                    "answer": "Write the answer guidance here"
-                }
-            ],
-            "behavioralQuestions": [
-                {
-                    "question": "Write your actual question here",
-                    "intention": "Write the intention here",
-                    "answer": "Write the answer guidance here"
-                }
-            ],
-            "skillGaps": [
-                {
-                    "skill": "Write skill name here",
-                    "severity": "medium"
-                }
-            ],
-            "preparationPlan": [
-                {
-                    "day": 1,
-                    "focus": "Write focus area here",
-                    "tasks": ["Write task 1 here", "Write task 2 here"]
-                }
-            ]
-        }
+        Important Content Guidelines:
+        1. Generate REAL, highly specific technical and behavioral questions based on the intersection of the job description and the candidate's resume.
+        2. Do NOT use generic placeholder text. Every field must contain unique, generated insights.
+        3. Identify actual, realistic skill gaps based on what the job requires versus what the resume shows.
+        4. Create an actionable day-by-day preparation plan.
 `
 
     const response = await ai.models.generateContent({

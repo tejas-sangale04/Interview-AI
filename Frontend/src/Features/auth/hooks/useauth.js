@@ -13,11 +13,12 @@ export const useAuth = () => {
             const data = await login({email,password})
             if(data && data.user){
                 setUser(data.user)
-                return true
+                return {success:true}
             }
-            return false
+            return {success: false, error: "Something went wrong" }
         }catch(err){
-            return false
+            const errorMessage = err.response?.data?.message || "Invalid Email or Password";
+            return {success: false,error:errorMessage}
         }finally{
             setLoading(false)
         }

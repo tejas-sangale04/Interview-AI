@@ -381,3 +381,71 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         }
     }
 }
+
+@media (max-width: 768px) {
+    // 1. Shrink the header text slightly
+    .page-header {
+        h1 {
+            font-size: 1.75rem;
+        }
+        padding-top: 1rem;
+    }
+
+    // 2. Stack the main card panels vertically
+    .interview-card {
+        &__body {
+            flex-direction: column;
+            min-height: auto; // Remove the hardcoded 520px height
+        }
+
+        &__footer {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+
+            // Make the generate button full-width for easier tapping
+            .generate-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    }
+
+    // 3. Adjust the vertical divider to be a horizontal line
+    .panel-divider {
+        width: 100%;
+        height: 1px;
+    }
+
+    // 4. Adjust panel padding to save screen space
+    .panel {
+        padding: 1.5rem 1rem;
+
+        &--left {
+            min-height: 300px; // Give the textarea some room when stacked
+            
+            .panel__textarea {
+                min-height: 200px;
+            }
+
+            .char-counter {
+                bottom: 1.5rem;
+                right: 1.5rem;
+            }
+        }
+    }
+
+    // 5. Make recent reports stack nicely
+    .recent-reports {
+        .reports-list {
+            flex-direction: column;
+        }
+    }
+    
+    // 6. Stack footer links
+    .page-footer {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+}
