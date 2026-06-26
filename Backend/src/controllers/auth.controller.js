@@ -35,7 +35,7 @@ async function registerUserController(req, res){
         {expiresIn: "1d"}
     )
 
-    res.cookie("token", token, { httpOnly: true, sameSite: 'lax' })
+    res.cookie("token", token, { httpOnly: true, sameSite: 'none',secure: true })
 
     res.status(201).json({
         message: "User registered Successfully",
