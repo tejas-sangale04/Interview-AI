@@ -1,4 +1,12 @@
 main{
+    .auth-page{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 1.5rem;
+    }
+
     min-height: 100vh;
     width: 100%;
 
@@ -7,11 +15,84 @@ main{
     align-items: center;
 
     .form-container{
-        min-width: 350px;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+       width: 100%;
+       max-width: 420px; // Prevents the form from becoming massive on desktop
+       background-color: #161b22;
+       padding: 2.5rem;
+       border-radius: 1rem;
+       border: 1px solid #2a3348;
+       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+       display: flex;
+       flex-direction: column;
+       gap: 1.5rem;
     }
+
+    .loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #0d1117; // Adjust if your background color is different
+  
+  // The animated ring
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 45, 120, 0.15); // Light pink/red track
+    border-top-color: #ff2d78; // Bright pink/red leading edge
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #7d8590; // Muted gray text
+    letter-spacing: 0.5px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+}
+
+// Keyframes for the spinning animation
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Keyframes for a gentle text pulse
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+    h1 {
+    font-size: 1.75rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    }
+
+    .feedback-message {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    text-align: center;
+    font-weight: 500;
+
+    &.error-message {
+      background-color: rgba(255, 77, 77, 0.1);
+      color: #ff4d4d;
+      border: 1px solid rgba(255, 77, 77, 0.3);
+    }
+
+    &.success-message {
+      background-color: rgba(63, 185, 80, 0.1);
+      color: #3fb950;
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+  }
 
     form{
         display: flex;
@@ -38,4 +119,16 @@ main{
         color: rgb(248, 29, 29);
         text-decoration: none;
     }
+
+    @media (max-width: 480px) {
+    padding: 1.5rem; // Less padding on small screens to save space
+    
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    .input-group input {
+      padding: 0.85rem; // Slightly larger touch targets for mobile
+    }
+  }
 }
