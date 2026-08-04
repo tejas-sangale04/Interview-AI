@@ -10,8 +10,8 @@ const app = express()
 
 // Middleware
 app.use(cors({
-    //origin: ["https://interview-ai-five-gamma.vercel.app"],
-    origin: "http://localhost:5173",
+    origin: ["https://interview-ai-five-gamma.vercel.app"],
+    //origin: "http://localhost:5173",
     credentials: true
 }))
 app.use(express.json())
