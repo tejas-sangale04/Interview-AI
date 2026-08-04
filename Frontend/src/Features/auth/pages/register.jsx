@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import { useState } from 'react';
 import "../auth.form.scss"
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useauth';
@@ -18,18 +18,18 @@ export default function Register () {
     setError("");
     const result = await handleRegister({username,email,password})
     if(result.success){
-      navigate('/')
+      navigate('/dashboard')
     }else{
       setError(result.error)
     }
   }
 
   if(loading){
-    return (<main><h1>Loading....</h1></main>)
+    return (<main className='auth-gradient'><h1>Loading....</h1></main>)
   }
 
   return (
-    <main>
+    <main className='auth-gradient'>
       <div className='form-container'>
       <h1>Register</h1>
       {error && <div style={{color: "red", marginBottom: "10px"}}>{error}</div>}

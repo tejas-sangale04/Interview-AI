@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import "../auth.form.scss"
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useauth'
@@ -23,7 +23,7 @@ export default function Login () {
     if(result.success){
       setSuccess("Login successful! Redirecting...");
       setTimeout(() => {
-        navigate('/');
+        navigate('/dashboard');
       },1500);
     }else{
       setError(result.error || "Invalid Email or Password");
@@ -31,14 +31,14 @@ export default function Login () {
   }
 
   if(loading){
-    return (<main className='loading-screen'>
+    return (<main className='loading-screen auth-gradient'>
             <div className='spinner'></div>
             <h2>Authenticating...</h2>
             </main>)
   }
 
   return (
-    <main className='auth-page'>
+    <main className='auth-page auth-gradient'>
     <div className="form-container">
       <h1>Login</h1>
 

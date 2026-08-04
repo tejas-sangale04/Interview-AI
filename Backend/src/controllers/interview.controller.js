@@ -1,34 +1,72 @@
 const pdfParse = require("pdf-parse")
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service")
 const interviewReportModel = require("../models/interviewReport.model")
+const { incrementGlobalApiUsage, getGlobalApiUsage } = require("../Middleware/rateLimit.middleware")
 
 /**
  * @description Controller to generate interview report based on user self description, resume and job description.
  */
 async function generateInterViewReportController(req, res) {
+    try {
+        const { selfDescription, jobDescription } = req.body
+        const resumeFile = req.file
 
-    const resumeContent = await (new pdfParse.PDFParse(Uint8Array.from(req.file.buffer))).getText()
-    const { selfDescription, jobDescription } = req.body
+        // Validation: Check if job description is provided
+        if (!jobDescription || jobDescription.trim() === '') {
+            return res.status(400).json({
+                message: "Job description is required."
+            })
+        }
 
-    const interViewReportByAi = await generateInterviewReport({
-        resume: resumeContent.text,
-        selfDescription,
-        jobDescription
-    })
+        // Validation: Check if either resume or self-description is provided
+        if (!resumeFile && (!selfDescription || selfDescription.trim() === '')) {
+            return res.status(400).json({
+                message: "Please upload a resume or provide a self-description."
+            })
+        }
 
-    const interviewReport = await interviewReportModel.create({
-        user: req.user.id,
-        resume: resumeContent.text,
-        selfDescription,
-        jobDescription,
-        ...interViewReportByAi
-    })
+        // Extract resume content if file is provided
+        let resumeContent = ''
+        if (resumeFile) {
+            const pdfData = await (new pdfParse.PDFParse(Uint8Array.from(resumeFile.buffer))).getText()
+            resumeContent = pdfData.text
+        }
 
-    res.status(201).json({
-        message: "Interview report generated successfully.",
-        interviewReport
-    })
+        // Use self-description if no resume is provided
+        const finalResumeContent = resumeContent || selfDescription
 
+        const interViewReportByAi = await generateInterviewReport({
+            resume: finalResumeContent,
+            selfDescription: selfDescription || '',
+            jobDescription
+        })
+
+        const interviewReport = await interviewReportModel.create({
+            user: req.user.id,
+            resume: finalResumeContent,
+            selfDescription: selfDescription || '',
+            jobDescription,
+            ...interViewReportByAi
+        })
+
+        // Increment global API usage count after successful generation
+        await incrementGlobalApiUsage()
+
+        // Get updated usage stats
+        const usageStats = await getGlobalApiUsage()
+
+        res.status(201).json({
+            message: "Interview report generated successfully.",
+            interviewReport,
+            apiUsage: usageStats
+        })
+    } catch (error) {
+        console.error("Error generating interview report:", error)
+        res.status(500).json({
+            message: "Error generating interview report.",
+            error: error.message
+        })
+    }
 }
 
 /**
@@ -84,6 +122,9 @@ async function generateResumePdfController(req, res) {
 
     const pdfBuffer = await generateResumePdf({ resume, jobDescription, selfDescription })
 
+    // Increment global API usage count after successful generation
+    await incrementGlobalApiUsage()
+
     res.set({
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename=resume_${interviewReportId}.pdf`
@@ -92,4 +133,30 @@ async function generateResumePdfController(req, res) {
     res.send(pdfBuffer)
 }
 
-module.exports = { generateInterViewReportController, getInterviewReportByIdController, getAllInterviewReportsController, generateResumePdfController }
+/**
+ * @description Controller to get global API usage statistics
+ */
+async function getApiUsageController(req, res) {
+    try {
+        const usageStats = await getGlobalApiUsage()
+
+        res.status(200).json({
+            message: "API usage statistics fetched successfully.",
+            usage: usageStats
+        })
+    } catch (error) {
+        console.error("Error fetching usage stats:", error)
+        res.status(500).json({
+            message: "Error fetching usage statistics.",
+            error: error.message
+        })
+    }
+}
+
+module.exports = { 
+    generateInterViewReportController, 
+    getInterviewReportByIdController, 
+    getAllInterviewReportsController, 
+    generateResumePdfController,
+    getApiUsageController
+}

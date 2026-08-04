@@ -14,6 +14,58 @@ $info-bg:        #1b2a4a;
 $info-border:    #2d4a7a;
 $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
+// ── Loading Screen ───────────────────────────────────────────────────────────
+.loading-screen {
+    width: 100%;
+    height: 100vh;
+    background-color: $bg-page;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    text-align: center;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba($accent, 0.2);
+    border-top-color: $accent;
+    border-right-color: $accent-alt;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-screen h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+}
+
+.loading-screen p {
+    font-size: 1rem;
+    color: $text-muted;
+    margin: 0;
+    max-width: 400px;
+}
+
 // ── Page Shell ───────────────────────────────────────────────────────────────
 .home-page {
     width: 100%;
@@ -25,14 +77,16 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     padding: 3rem 1.5rem;
     gap: 2rem;
+    padding-top: 120px; // Space for fixed navbar (70px) + extra spacing
 }
 
 // ── Page Header ──────────────────────────────────────────────────────────────
 .page-header {
     text-align: center;
+    width: 100%;
+    max-width: 1000px;
 
     h1 {
         font-size: 2.25rem;
@@ -49,9 +103,64 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         line-height: 1.6;
     }
 
-    .highlight {
-        color: $accent;
+}
+
+// ── Tab Navigation ──────────────────────────────────────────────────────────────
+.tab-navigation {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid $border-color;
+    width: 100%;
+    max-width: 1000px;
+    padding-bottom: 1rem;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    color: $text-muted;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: $font-stack;
+
+    svg {
+        width: 18px;
+        height: 18px;
     }
+
+    &:hover {
+        color: $text-primary;
+        background: rgba($accent, 0.05);
+    }
+
+    &.active {
+        color: $accent;
+        border-bottom-color: $accent;
+    }
+}
+
+// ── Highlight ──────────────────────────────────────────────────────────────
+.highlight {
+    color: $accent;
+}
+
+// ── Job Search Container ────────────────────────────────────────────────────────
+.job-search-container {
+    width: 100%;
+    max-width: 900px;
+    background: $bg-card;
+    border: 1px solid $border-color;
+    border-radius: 1rem;
+    padding: 2rem;
+    overflow: hidden;
 }
 
 // ── Main Card ─────────────────────────────────────────────────────────────────
@@ -142,6 +251,15 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         &--short {
             flex: unset;
             height: 96px;
+        }
+
+        &--error {
+            border-color: #f85149;
+            background-color: rgba(248, 81, 73, 0.05);
+
+            &:focus {
+                border-color: #f85149;
+            }
         }
     }
 
@@ -305,6 +423,24 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     }
 }
 
+// ── Error Message ─────────────────────────────────────────────────────────────
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background-color: rgba(248, 81, 73, 0.1);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+    border-radius: 0.4rem;
+    color: #f85149;
+    font-size: 0.8rem;
+    font-weight: 500;
+
+    svg {
+        flex-shrink: 0;
+    }
+}
+
 // ── Generate Button ───────────────────────────────────────────────────────────
 .generate-btn {
     display: flex;
@@ -337,6 +473,13 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
     width: 100%;
     max-width: 900px;
 
+    h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: $text-primary;
+        margin: 0;
+    }
+
     .reports-list{
         display: flex;
         gap: 0.75rem;
@@ -348,17 +491,29 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
             border-radius: 0.5rem;
             padding: 1rem;
             flex: 1;
+            min-width: 250px;
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
             cursor: pointer;
-            flex-shrink: 0;
+            transition: all 0.3s ease;
 
-            .match-score {
-                font-size: 0.8rem;
+            &:hover {
+                border-color: $accent;
+                background-color: rgba($accent, 0.05);
+            }
+
+            h3 {
+                font-size: 0.95rem;
                 font-weight: 600;
-                color: $accent;
-                align-items: flex-start;
+                color: $text-primary;
+                margin: 0;
+            }
+
+            .report-meta {
+                font-size: 0.8rem;
+                color: $text-muted;
+                margin: 0;
             }
         }
     }
@@ -369,6 +524,10 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
 .page-footer {
     display: flex;
     gap: 1.5rem;
+    width: 100%;
+    max-width: 900px;
+    justify-content: center;
+    padding: 2rem 0;
 
     a {
         font-size: 0.8rem;
@@ -383,15 +542,32 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
 }
 
 @media (max-width: 768px) {
-    // 1. Shrink the header text slightly
+    // 1. Adjust page padding and spacing
+    .home-page {
+        padding: 2rem 1rem;
+        padding-top: 100px; // Space for mobile navbar (60px) + extra spacing
+        gap: 1.5rem;
+    }
+
+    // 2. Shrink the header text slightly
     .page-header {
         h1 {
             font-size: 1.75rem;
         }
-        padding-top: 1rem;
     }
 
-    // 2. Stack the main card panels vertically
+    // 3. Tab navigation responsive
+    .tab-navigation {
+        margin-bottom: 1.5rem;
+        gap: 0.5rem;
+    }
+
+    .tab-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    // 4. Stack the main card panels vertically
     .interview-card {
         &__body {
             flex-direction: column;
@@ -411,18 +587,19 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         }
     }
 
-    // 3. Adjust the vertical divider to be a horizontal line
+    // 5. Adjust the vertical divider to be a horizontal line
     .panel-divider {
         width: 100%;
         height: 1px;
+        margin: 0;
     }
 
-    // 4. Adjust panel padding to save screen space
+    // 6. Adjust panel padding to save screen space
     .panel {
         padding: 1.5rem 1rem;
 
         &--left {
-            min-height: 300px; // Give the textarea some room when stacked
+            min-height: auto;
             
             .panel__textarea {
                 min-height: 200px;
@@ -435,14 +612,23 @@ $font-stack:     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Robot
         }
     }
 
-    // 5. Make recent reports stack nicely
+    // 7. Job search container
+    .job-search-container {
+        padding: 1rem;
+    }
+
+    // 8. Make recent reports stack nicely
     .recent-reports {
         .reports-list {
             flex-direction: column;
         }
+
+        .report-item {
+            min-width: unset;
+        }
     }
     
-    // 6. Stack footer links
+    // 9. Stack footer links
     .page-footer {
         flex-direction: column;
         align-items: center;

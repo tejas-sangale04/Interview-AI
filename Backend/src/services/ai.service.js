@@ -1,10 +1,10 @@
-const { GoogleGenAI } = require("@google/genai")
+const OpenAI = require("openai")
 const { z } = require("zod")
 const { zodToJsonSchema } = require("zod-to-json-schema")
 const puppeteer = require("puppeteer")
 
-const ai = new GoogleGenAI({
-    apiKey: process.env.GOOGLE_GENAI_API_KEY
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY
 })
 
 // Add this helper function above generateInterviewReport
@@ -133,19 +133,139 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
         4. Create an actionable day-by-day preparation plan.
 `
 
-    const response = await ai.models.generateContent({
-       model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(interviewReportSchema),
-        }
+    const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+            {
+                role: "system",
+                content: "You are an expert career counselor and interview preparation specialist. Generate detailed, specific interview reports based on candidate information and job descriptions. Always return valid JSON matching the provided schema."
+            },
+            {
+                role: "user",
+                content: prompt
+            }
+        ],
+        response_format: {
+            type: "json_schema",
+            json_schema: {
+                name: "interview_report",
+                strict: true,
+                schema: {
+                    type: "object",
+                    properties: {
+                        title: {
+                            type: "string",
+                            description: "The title of the job for which the interview report is generated"
+                        },
+                        matchScore: {
+                            type: "number",
+                            description: "A score between 0 and 100 indicating how well the candidate's profile matches the job description"
+                        },
+                        technicalQuestions: {
+                            type: "array",
+                            description: "Technical questions that can be asked in the interview along with their intention and how to answer them",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    question: {
+                                        type: "string",
+                                        description: "The technical question can be asked in the interview"
+                                    },
+                                    intention: {
+                                        type: "string",
+                                        description: "The intention of interviewer behind asking this question"
+                                    },
+                                    answer: {
+                                        type: "string",
+                                        description: "How to answer this question, what points to cover, what approach to take etc."
+                                    }
+                                },
+                                required: ["question", "intention", "answer"],
+                                additionalProperties: false
+                            }
+                        },
+                        behavioralQuestions: {
+                            type: "array",
+                            description: "Behavioral questions that can be asked in the interview along with their intention and how to answer them",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    question: {
+                                        type: "string",
+                                        description: "The behavioral question can be asked in the interview"
+                                    },
+                                    intention: {
+                                        type: "string",
+                                        description: "The intention of interviewer behind asking this question"
+                                    },
+                                    answer: {
+                                        type: "string",
+                                        description: "How to answer this question, what points to cover, what approach to take etc."
+                                    }
+                                },
+                                required: ["question", "intention", "answer"],
+                                additionalProperties: false
+                            }
+                        },
+                        skillGaps: {
+                            type: "array",
+                            description: "List of skill gaps in the candidate's profile along with their severity",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    skill: {
+                                        type: "string",
+                                        description: "The skill which the candidate is lacking"
+                                    },
+                                    severity: {
+                                        type: "string",
+                                        enum: ["low", "medium", "high"],
+                                        description: "The severity of this skill gap"
+                                    }
+                                },
+                                required: ["skill", "severity"],
+                                additionalProperties: false
+                            }
+                        },
+                        preparationPlan: {
+                            type: "array",
+                            description: "A day-wise preparation plan for the candidate to follow",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    day: {
+                                        type: "number",
+                                        description: "The day number in the preparation plan, starting from 1"
+                                    },
+                                    focus: {
+                                        type: "string",
+                                        description: "The main focus of this day in the preparation plan"
+                                    },
+                                    tasks: {
+                                        type: "array",
+                                        description: "List of tasks to be done on this day",
+                                        items: {
+                                            type: "string"
+                                        }
+                                    }
+                                },
+                                required: ["day", "focus", "tasks"],
+                                additionalProperties: false
+                            }
+                        }
+                    },
+                    required: ["title", "matchScore", "technicalQuestions", "behavioralQuestions", "skillGaps", "preparationPlan"],
+                    additionalProperties: false
+                }
+            }
+        },
+        temperature: 0.7
     })
 
-    console.log("AI RAW RESPONSE:", response.text)
+    const responseText = response.choices[0].message.content
+    console.log("AI RAW RESPONSE:", responseText)
 
-    //return JSON.parse(response.text)
-     const parsed = JSON.parse(response.text)
+    const parsed = JSON.parse(responseText)
     const result = Array.isArray(parsed) ? parsed[0] : parsed
 
     // ✅ Reconstruct proper objects from flat arrays
@@ -196,17 +316,40 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
                         The resume should not be so lengthy, it should ideally be 1 page long when converted to PDF. Focus on quality rather than quantity and make sure to include all the relevant information that can increase the candidate's chances of getting an interview call for the given job description.
                     `
 
-    const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(resumePdfSchema),
-        }
+    const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+            {
+                role: "system",
+                content: "You are an expert resume writer. Generate professional, ATS-friendly HTML resumes tailored to specific job descriptions. Always return valid JSON with properly formatted HTML."
+            },
+            {
+                role: "user",
+                content: prompt
+            }
+        ],
+        response_format: {
+            type: "json_schema",
+            json_schema: {
+                name: "resume_html",
+                strict: true,
+                schema: {
+                    type: "object",
+                    properties: {
+                        html: {
+                            type: "string",
+                            description: "The HTML content of the resume"
+                        }
+                    },
+                    required: ["html"],
+                    additionalProperties: false
+                }
+            }
+        },
+        temperature: 0.7
     })
 
-
-    const jsonContent = JSON.parse(response.text)
+    const jsonContent = JSON.parse(response.choices[0].message.content)
 
     const pdfBuffer = await generatePdfFromHtml(jsonContent.html)
 

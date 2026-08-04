@@ -1,0 +1,261 @@
+/* ======================================
+   GRADIENT & ANIMATION UTILITIES
+   ====================================== */
+
+:root {
+  --radius: 0.75rem;
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --surface: #161b22;
+  --card: #161b22;
+  --card-foreground: #e6edf3;
+  --primary: #ff2d78;
+  --primary-glow: #ff6b9d;
+  --primary-foreground: #ffffff;
+  --secondary: #ff2d78;
+  --secondary-foreground: #e6edf3;
+  --muted: #7d8590;
+  --muted-foreground: #7d8590;
+  --accent: #ff2d78;
+  --accent-foreground: #e6edf3;
+  --destructive: #ff2d78;
+  --destructive-foreground: #ffffff;
+  --border: #2a3348;
+  --input: #1e2535;
+  --ring: #ff2d78;
+  --gradient-primary: linear-gradient(135deg, #ff2d78, #ff6b9d);
+  --shadow-glow: 0 20px 60px -20px rgba(255, 45, 120, 0.6);
+}
+
+/* ======================================
+   HERO SECTION GRADIENT STYLES
+   ====================================== */
+
+.hero-gradient {
+  background: 
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(255, 45, 120, 0.2), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 80% 50%, rgba(255, 107, 157, 0.12), transparent 60%),
+    radial-gradient(ellipse 80% 50% at 20% 50%, rgba(255, 45, 120, 0.1), transparent 60%),
+    #0d1117;
+  position: relative;
+}
+
+.hero-gradient-text {
+  background: linear-gradient(135deg, #ff2d78, #ff6b9d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-gradient-border {
+  border: 1px solid transparent;
+  background: 
+    linear-gradient(#1a1f2e, #1a1f2e) padding-box,
+    linear-gradient(135deg, #5850ec, #7c66ff) border-box;
+}
+
+/* ======================================
+   NAVIGATION GRADIENT STYLES
+   ====================================== */
+
+.nav-gradient {
+  background: rgba(13, 17, 23, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 45, 120, 0.1);
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.3),
+    inset 0 -1px 0 0 rgba(255, 45, 120, 0.15);
+}
+
+.nav-gradient-btn {
+  background: linear-gradient(135deg, #ff2d78, #ff6b9d);
+  box-shadow: 
+    0 4px 20px rgba(255, 45, 120, 0.4),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  border: none;
+  color: white;
+}
+
+.nav-gradient-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 30px rgba(255, 45, 120, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, #ff3d8f, #ff7bad);
+}
+
+/* ======================================
+   BADGE GRADIENT STYLE
+   ====================================== */
+
+.badge-gradient {
+  background: rgba(255, 45, 120, 0.1);
+  border: 1px solid rgba(255, 45, 120, 0.3);
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 4px 15px rgba(255, 45, 120, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ======================================
+   CARD GRADIENT HOVER EFFECTS
+   ====================================== */
+
+.card-gradient-hover {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  background: rgba(22, 27, 34, 0.6);
+  border: 1px solid rgba(255, 45, 120, 0.15);
+}
+
+.card-gradient-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 45, 120, 0.4);
+  background: rgba(28, 34, 48, 0.7);
+  box-shadow: 
+    0 12px 40px rgba(255, 45, 120, 0.25),
+    inset 0 1px 0 0 rgba(255, 45, 120, 0.15);
+}
+
+/* ======================================
+   CTA SECTION GRADIENT
+   ====================================== */
+
+.cta-gradient {
+  background: linear-gradient(135deg, #ff2d78 0%, #ff6b9d 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1), transparent 50%),
+    radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.08), transparent 50%);
+  pointer-events: none;
+}
+
+/* ======================================
+   GRADIENT BORDER
+   ====================================== */
+
+.gradient-border {
+  position: relative;
+  border: 1px solid rgba(255, 45, 120, 0.3);
+  background: 
+    linear-gradient(rgba(22, 27, 34, 0.9), rgba(22, 27, 34, 0.9)) padding-box,
+    linear-gradient(135deg, #ff2d78, #ff6b9d, #ff2d78) border-box;
+  box-shadow: 0 0 20px rgba(255, 45, 120, 0.15);
+}
+
+/* ======================================
+   GLOW EFFECT FOR INTERACTIVE ELEMENTS
+   ====================================== */
+
+.glow-effect {
+  box-shadow: 
+    0 0 30px rgba(255, 45, 120, 0.3),
+    0 0 60px rgba(255, 45, 120, 0.15);
+}
+
+.glow-effect:hover {
+  box-shadow: 
+    0 0 40px rgba(255, 45, 120, 0.45),
+    0 0 80px rgba(255, 45, 120, 0.25);
+}
+
+/* ======================================
+   ANIMATIONS
+   ====================================== */
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes progressFill {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ======================================
+   UTILITY CLASSES
+   ====================================== */
+
+.animate-rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+.gradient-primary {
+  background-image: var(--gradient-primary);
+}
+
+.navy-gradient-bg {
+  background: linear-gradient(135deg, #0d1117 0%, #0d1117 50%, #1a0f2e 100%);
+}
+
+.auth-gradient {
+  background: #0d1117;
+  min-height: 100vh;
+}
+
+/* ======================================
+   RESPONSIVE UTILITIES
+   ====================================== */
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none;
+  }
+}
