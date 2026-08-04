@@ -96,11 +96,13 @@ const JobSearch = () => {
         ? `${location.trim()}, ${country}`
         : location.trim();
 
-      const response = await fetch('http://localhost:3000/api/jobs/search', {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const response = await fetch(`${apiUrl}/api/jobs/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           role: role.trim(),
           location: fullLocation,
